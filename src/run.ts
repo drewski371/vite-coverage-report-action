@@ -23,186 +23,188 @@ export const run = async (
 ) => {
     const isInPR = context.eventName === 'pull_request';
 
-    const [isInitialized, options] = await runStage(
-        'initialize',
-        dataCollector,
-        getOptions
-    );
+    throw Error('does this work?');
 
-    if (!isInitialized || !options) {
-        throw Error('Initialization failed.');
-    }
+    // const [isInitialized, options] = await runStage(
+    //     'initialize',
+    //     dataCollector,
+    //     getOptions
+    // );
 
-    const [isThresholdParsed, threshold] = await runStage(
-        'parseThreshold',
-        dataCollector,
-        () => {
-            return getNormalThreshold(
-                options.workingDirectory ?? process.cwd(),
-                options.threshold
-            );
-        }
-    );
+    // if (!isInitialized || !options) {
+    //     throw Error('Initialization failed.');
+    // }
 
-    const [isHeadCoverageGenerated, headCoverage] = await runStage(
-        'headCoverage',
-        dataCollector,
-        async () => {
-            return await getCoverage(
-                dataCollector,
-                options,
-                false,
-                options.coverageFile
-            );
-        }
-    );
+    // const [isThresholdParsed, threshold] = await runStage(
+    //     'parseThreshold',
+    //     dataCollector,
+    //     () => {
+    //         return getNormalThreshold(
+    //             options.workingDirectory ?? process.cwd(),
+    //             options.threshold
+    //         );
+    //     }
+    // );
 
-    if (headCoverage) {
-        dataCollector.add(headCoverage);
-    }
+    // const [isHeadCoverageGenerated, headCoverage] = await runStage(
+    //     'headCoverage',
+    //     dataCollector,
+    //     async () => {
+    //         return await getCoverage(
+    //             dataCollector,
+    //             options,
+    //             false,
+    //             options.coverageFile
+    //         );
+    //     }
+    // );
 
-    const [isSwitched] = await runStage(
-        'switchToBase',
-        dataCollector,
-        async (skip) => {
-            const baseBranch = context.payload.pull_request?.base.ref;
+    // if (headCoverage) {
+    //     dataCollector.add(headCoverage);
+    // }
 
-            // no need to switch branch when:
-            // - this is not a PR
-            // - this is the PR base branch
-            // - a baseCoverageFile is provided
-            if (!isInPR || !baseBranch || !!options.baseCoverageFile) {
-                skip();
-            }
+    // const [isSwitched] = await runStage(
+    //     'switchToBase',
+    //     dataCollector,
+    //     async (skip) => {
+    //         const baseBranch = context.payload.pull_request?.base.ref;
 
-            await switchBranch(baseBranch);
-        }
-    );
+    //         // no need to switch branch when:
+    //         // - this is not a PR
+    //         // - this is the PR base branch
+    //         // - a baseCoverageFile is provided
+    //         if (!isInPR || !baseBranch || !!options.baseCoverageFile) {
+    //             skip();
+    //         }
 
-    const ignoreCollector = createDataCollector<JsonReport>();
+    //         await switchBranch(baseBranch);
+    //     }
+    // );
 
-    const [, baseCoverage] = await runStage(
-        'baseCoverage',
-        dataCollector,
-        async (skip) => {
-            if (!isSwitched && !options.baseCoverageFile) {
-                skip();
-            }
+    // const ignoreCollector = createDataCollector<JsonReport>();
 
-            return await getCoverage(
-                ignoreCollector,
-                options,
-                true,
-                options.baseCoverageFile
-            );
-        }
-    );
+    // const [, baseCoverage] = await runStage(
+    //     'baseCoverage',
+    //     dataCollector,
+    //     async (skip) => {
+    //         if (!isSwitched && !options.baseCoverageFile) {
+    //             skip();
+    //         }
 
-    await runStage('switchBack', dataCollector, async (skip) => {
-        if (!isSwitched) {
-            skip();
-        }
+    //         return await getCoverage(
+    //             ignoreCollector,
+    //             options,
+    //             true,
+    //             options.baseCoverageFile
+    //         );
+    //     }
+    // );
 
-        await switchBranch(context.payload.pull_request!.head.ref);
-    });
+    // await runStage('switchBack', dataCollector, async (skip) => {
+    //     if (!isSwitched) {
+    //         skip();
+    //     }
 
-    if (baseCoverage) {
-        dataCollector.add(baseCoverage);
-    }
+    //     await switchBranch(context.payload.pull_request!.head.ref);
+    // });
 
-    const [, thresholdResults] = await runStage(
-        'checkThreshold',
-        dataCollector,
-        async (skip) => {
-            if (!isHeadCoverageGenerated || !isThresholdParsed) {
-                skip();
-            }
+    // if (baseCoverage) {
+    //     dataCollector.add(baseCoverage);
+    // }
 
-            return checkThreshold(
-                headCoverage!,
-                threshold!,
-                options.workingDirectory,
-                dataCollector as DataCollector<unknown>
-            );
-        }
-    );
+    // const [, thresholdResults] = await runStage(
+    //     'checkThreshold',
+    //     dataCollector,
+    //     async (skip) => {
+    //         if (!isHeadCoverageGenerated || !isThresholdParsed) {
+    //             skip();
+    //         }
 
-    const [isReportContentGenerated, summaryReport] = await runStage(
-        'generateReportContent',
-        dataCollector,
-        async () => {
-            return createReport(dataCollector, options, thresholdResults ?? []);
-        }
-    );
+    //         return checkThreshold(
+    //             headCoverage!,
+    //             threshold!,
+    //             options.workingDirectory,
+    //             dataCollector as DataCollector<unknown>
+    //         );
+    //     }
+    // );
 
-    await runStage('publishReport', dataCollector, async (skip) => {
-        if (!isReportContentGenerated) {
-            skip();
-        }
+    // const [isReportContentGenerated, summaryReport] = await runStage(
+    //     'generateReportContent',
+    //     dataCollector,
+    //     async () => {
+    //         return createReport(dataCollector, options, thresholdResults ?? []);
+    //     }
+    // );
 
-        const octokit = getOctokit(options.token);
+    // await runStage('publishReport', dataCollector, async (skip) => {
+    //     if (!isReportContentGenerated) {
+    //         skip();
+    //     }
 
-        if (isInPR) {
-            await generatePRReport(
-                summaryReport!.text,
-                options,
-                context.repo,
-                context.payload.pull_request!,
-                octokit
-            );
-        } else {
-            await generateCommitReport(
-                summaryReport!.text,
-                context.repo,
-                octokit
-            );
-        }
-    });
+    //     const octokit = getOctokit(options.token);
 
-    await runStage('failedTestsAnnotations', dataCollector, async (skip) => {
-        if (
-            !isHeadCoverageGenerated ||
-            !['all', 'failed-tests'].includes(options.annotations)
-        ) {
-            skip();
-        }
+    //     if (isInPR) {
+    //         await generatePRReport(
+    //             summaryReport!.text,
+    //             options,
+    //             context.repo,
+    //             context.payload.pull_request!,
+    //             octokit
+    //         );
+    //     } else {
+    //         await generateCommitReport(
+    //             summaryReport!.text,
+    //             context.repo,
+    //             octokit
+    //         );
+    //     }
+    // });
 
-        const failedAnnotations = createFailedTestsAnnotations(headCoverage!);
+    // await runStage('failedTestsAnnotations', dataCollector, async (skip) => {
+    //     if (
+    //         !isHeadCoverageGenerated ||
+    //         !['all', 'failed-tests'].includes(options.annotations)
+    //     ) {
+    //         skip();
+    //     }
 
-        if (failedAnnotations.length === 0) {
-            skip();
-        }
+    //     const failedAnnotations = createFailedTestsAnnotations(headCoverage!);
 
-        const octokit = getOctokit(options.token);
-        await octokit.checks.create(
-            formatFailedTestsAnnotations(
-                summaryReport!.runReport,
-                failedAnnotations
-            )
-        );
-    });
+    //     if (failedAnnotations.length === 0) {
+    //         skip();
+    //     }
 
-    await runStage('coverageAnnotations', dataCollector, async (skip) => {
-        if (
-            !isHeadCoverageGenerated ||
-            !['all', 'coverage'].includes(options.annotations)
-        ) {
-            skip();
-        }
+    //     const octokit = getOctokit(options.token);
+    //     await octokit.checks.create(
+    //         formatFailedTestsAnnotations(
+    //             summaryReport!.runReport,
+    //             failedAnnotations
+    //         )
+    //     );
+    // });
 
-        const coverageAnnotations = createCoverageAnnotations(headCoverage!);
+    // await runStage('coverageAnnotations', dataCollector, async (skip) => {
+    //     if (
+    //         !isHeadCoverageGenerated ||
+    //         !['all', 'coverage'].includes(options.annotations)
+    //     ) {
+    //         skip();
+    //     }
 
-        if (coverageAnnotations.length === 0) {
-            skip();
-        }
+    //     const coverageAnnotations = createCoverageAnnotations(headCoverage!);
 
-        const octokit = getOctokit(options.token);
-        await octokit.checks.create(
-            formatCoverageAnnotations(coverageAnnotations)
-        );
-    });
+    //     if (coverageAnnotations.length === 0) {
+    //         skip();
+    //     }
 
-    if (dataCollector.get().errors.length > 0) {
-        setFailed(i18n('failed'));
-    }
+    //     const octokit = getOctokit(options.token);
+    //     await octokit.checks.create(
+    //         formatCoverageAnnotations(coverageAnnotations)
+    //     );
+    // });
+
+    // if (dataCollector.get().errors.length > 0) {
+    //     setFailed(i18n('failed'));
+    // }
 };
