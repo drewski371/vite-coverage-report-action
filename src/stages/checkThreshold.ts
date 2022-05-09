@@ -21,7 +21,7 @@ export const checkThreshold = (
     dataCollector: DataCollector<unknown>
 ) => {
     const cwd = joinPaths(process.cwd(), workingDirectory);
-    console.log('~ cwd', cwd);
+    dataCollector.info(`~ cwd ${cwd}`);
     // Maybe somehow take this from "format" stage?
     const coverageDetailMap = Object.fromEntries(
         Object.entries(getFileCoverageMap(report)).map(([key, value]) => [
@@ -29,7 +29,7 @@ export const checkThreshold = (
             value,
         ])
     );
-    console.log('~ coverageDetailMap', coverageDetailMap);
+    dataCollector.info(`~ coverageDetailMap ${coverageDetailMap}`);
 
     const dirSet = new Set<string>();
 
@@ -45,11 +45,11 @@ export const checkThreshold = (
         });
 
     const directories = Array.from(dirSet);
-    console.log('~ directories', directories);
+    dataCollector.info(`~ directories ${directories}`);
 
     const totalResults: ThresholdResult[] = [];
 
-    console.log('~ threshold', threshold);
+    dataCollector.info(`~ threshold ${threshold}`);
     Object.entries(threshold).forEach(([pattern, threshold]) => {
         const selectedDirectories = micromatch(directories, pattern);
 
